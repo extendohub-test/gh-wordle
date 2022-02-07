@@ -88,6 +88,7 @@ async function getWord() {
 
 async function pickNewWord() {
   const words = await getWords()
+  console.dir(words)
   const word = words[helpers._.random(0, words.length)]
   if (!word) throw new Error(`Couldn't pick a word`)
   await helpers.keyValue.set('word', { word, date: today() })
@@ -96,6 +97,7 @@ async function pickNewWord() {
 
 async function getWords() {
   const response = await helpers.octokit.repos.getContent({ owner: 'extendohub', repo: 'gh-wordle', path: 'words.json' })
+  console.dir(response)
   if (response.statusCode < 200 || response.statusCode >= 300) throw new Error('There was a problem loading words!')
   return JSON.parse(Buffer.from(response.data.content, 'base64').toString('utf8'))
 }
