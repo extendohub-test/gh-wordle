@@ -2,26 +2,24 @@ import { keyValue, octokit, _ } from '@extendohub/runtime'
 
 const duration = 24 * 60 * 60 * 1000   // 24 hours in milliseconds
 
-export default async ({ event }) => {
-  const { http } = event
-  const handler = handlers[http.request.method]
-  return handler ? handler(http) : http.response({ status: 404 })
+export default async ({ request, response }) => {
+  const handler = handlers[request.method]
+  return handler ? handler(request, response) : response({ status: 404 })
 }
 
 const handlers = {
-  post: async ({ request, response, sender }) => {
+  post: async (request, response) => {
     const guess = request.params.guess
     if (!await validateGuess(guess)) return response({ status: 400 })
-    let game = await getGame(sender)
+    let game = await getGame(request.sender)
     if (game.status === 'running') {
       if (!validateGame(game)) return response({ status: 400 })
       game = await play(game, guess)
     }
     return response({ body: cleanGame(game) })
   },
-  get: async (http) => {
-    const { response, sender } = http
-    const game = await keyValue.get(getKey(sender))
+  get: async (request, response) => {
+    const game = await keyValue.get(getKey(request.sender))
     if (!game || !isToday(game.date)) return response({ status: 404 })
     return cleanGame(game)
   }
