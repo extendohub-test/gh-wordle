@@ -2,8 +2,8 @@ import { keyValue, octokit, _ } from '@extendohub/runtime'
 
 const duration = 24 * 60 * 60 * 1000   // 24 hours in milliseconds
 
-export default async ({ events }) => {
-  const { http } = events
+export default async ({ event }) => {
+  const { http } = event
   const handler = handlers[http.request.method]
   return handler ? handler(http) : http.response({ status: 404 })
 }
