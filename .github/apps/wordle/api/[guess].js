@@ -1,4 +1,5 @@
-import { keyValue, octokit, _ } from '@extendohub/runtime'
+import { kv } from '@extendohub/storage'
+import {  octokit, _ } from '@extendohub/services'
 
 const duration = 24 * 60 * 60 * 1000   // 24 hours in milliseconds
 
@@ -19,7 +20,7 @@ const handlers = {
     return response({ body: cleanGame(game) })
   },
   get: async (request, response) => {
-    const game = await keyValue.get(getKey(request.sender))
+    const game = await kv.get(getKey(request.sender))
     if (!game || !isToday(game.date)) return response({ status: 404 })
     return cleanGame(game)
   }
@@ -60,13 +61,13 @@ function compare(word, guess) {
 }
 
 async function getGame(player) {
-  const game = await keyValue.get(getKey(player))
+  const game = await kv.get(getKey(player))
   if (game && game.word && isToday(game.date)) return game
   return { player, date: today(), status: 'running', word: await getWord(), guesses: [] }
 }
 
 async function saveGame(game) {
-  return keyValue.set(getKey(game.player), game)
+  return kv.set(getKey(game.player), game)
 }
 
 function getKey(player) {
@@ -74,10 +75,10 @@ function getKey(player) {
 }
 
 async function getWord() {
-  const word = await keyValue.get('word')
+  const word = await kv.get('word')
   if (word && isToday(word.date)) return word.word
   const newWord = pickNewWord()
-  await keyValue.set('word', { word: newWord, date: today() })
+  await kv.set('word', { word: newWord, date: today() })
   return newWord
 }
 
@@ -85,7 +86,7 @@ async function pickNewWord() {
   const words = await getWords()
   const word = words[_.random(0, words.length)]
   if (!word) throw new Error(`Couldn't pick a word`)
-  await keyValue.set('word', { word, date: today() })
+  await kv.set('word', { word, date: today() })
   return word
 }
 
